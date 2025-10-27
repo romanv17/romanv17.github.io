@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Perspective Correction</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="loupeCanvas"></canvas>
+    <canvas id="outputCanvas"></canvas>
+
+    <div id="controls">
+        <div id="mainControls">
+            <label for="cameraInput" id="cameraButton">
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+                <img src="camera-icon.png" alt="Camera Icon">
+            </label>
+
+            <button id="autoCorrectButton" disabled>Auto-Correct</button>
+            <button id="transformButton" disabled>Transform</button>
+            <button id="resetButton" disabled>Reset</button>
+        </div>
+
+        <div id="outputControls">
+            <button id="backButton">Back to Edit</button>
+            <button id="downloadButton">Share / Download</button>
+        </div>
+    </div>
+
+    <div id="loader">
+        <div id="loaderContent">
+            <div id="spinner"></div>
+            <p id="loaderText">Processing...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
