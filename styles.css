@@ -20,11 +20,11 @@ html, body {
 }
 
 #mainCanvas {
-    background-color: #333;
+    background-color: #161616;
 }
 
 #outputCanvas {
-    background-color: #222;
+    background-color: black;
     display: none;
     object-fit: contain;
 }
@@ -53,65 +53,72 @@ html, body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(0,0,0,0.7);
+    background: black;
     backdrop-filter: blur(10px);
     padding: 16px;
-    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 35px;
+    padding-bottom: 35px;
+    border-top: 1px solid black;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-#mainControls, #outputControls {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+/* Main and output control rows: default to flex row layout. We keep
+   `#outputControls` initially hidden, but when the script toggles
+   inline styles (e.g. sets `display: grid`), the attribute selector
+   below forces a horizontal flex layout so items don't stack vertically. */
+#mainControls {
+    display: flex;
+    text-align: justify;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
 }
 
+/* Hidden by default until the app shows the output controls */
 #outputControls {
     display: none;
 }
 
+/* When the script adds an inline `style` and sets `display: grid`,
+   override that specific case and force a horizontal flex layout so
+   buttons remain in a row. We intentionally only match the `grid`
+   value so cases where the script sets `display: none` are NOT
+   overridden (allowing the script to hide a control group). */
+#mainControls[style*="display: grid"],
+#mainControls[style*="display:grid"],
+#outputControls[style*="display: grid"],
+#outputControls[style*="display:grid"] {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
 /* Buttons */
-button, label#cameraButton {
+button, label img  {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 30px;
     font-weight: 600;
     color: white;
     cursor: pointer;
-    background-color: #6b7e9a; /* default gray */
+    background-color: #2a2a2a;
     transition: background-color 0.15s ease;
-} /* need a way to rearrange buttons so they're cleaner */
+}
 
-label#cameraButton img {
+button img, label img {
     width: 50px;
     height: 50px;
 }
 
-/* Button colors */
-#cameraButton { background-color: #0e91d300 !important;}
-
-#autoCorrectButton { background-color: #9333ea; }
-#autoCorrectButton:hover { background-color: #7e22ce; }
-
-#transformButton { background-color: #16a34a; }
-#transformButton:hover { background-color: #15803d; }
-
-#resetButton { background-color: #4b5563; grid-column: span 2; }
-#resetButton:hover { background-color: #374151; }
-
-#backButton { background-color: #2563eb; }
-#backButton:hover { background-color: #1d4ed8; }
-
-#downloadButton { background-color: #16a34a; }
-#downloadButton:hover { background-color: #15803d; }
 
 button:disabled {
-    background-color: #606164 !important;
     cursor: not-allowed;
 }
 

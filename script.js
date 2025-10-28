@@ -453,7 +453,7 @@ class PerspectiveApp {
         
         this.autoCorrectButton = document.getElementById('autoCorrectButton');
         this.transformButton = document.getElementById('transformButton');
-        this.resetButton = document.getElementById('resetButton');
+        this.resetButtonBefore = document.getElementById('resetButtonBefore');
         this.backButton = document.getElementById('backButton');
         this.downloadButton = document.getElementById('downloadButton');
         
@@ -489,7 +489,7 @@ class PerspectiveApp {
     bindEvents() {
         window.addEventListener('resize', this.resize.bind(this));
         
-        this.cameraInput.addEventListener('change', this.loadImage.bind(this));
+        this.cameraInput.addEventListener('click', this.loadImage.bind(this));
         
         this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
         this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
@@ -498,7 +498,7 @@ class PerspectiveApp {
         // Button Listeners
         this.autoCorrectButton.addEventListener('click', this.onAutoCorrect.bind(this));
         this.transformButton.addEventListener('click', this.onTransform.bind(this));
-        this.resetButton.addEventListener('click', this.reset.bind(this));
+        this.resetButtonBefore.addEventListener('click', this.reset.bind(this));
         this.backButton.addEventListener('click', this.showMainView.bind(this));
         this.downloadButton.addEventListener('click', this.shareOrDownloadImage.bind(this));
     }
@@ -597,7 +597,7 @@ class PerspectiveApp {
         // --- 3. Reset view and quad ---
         this.reset();
         this.autoCorrectButton.disabled = false;
-        this.resetButton.disabled = false;
+        this.resetButtonBefore.disabled = false;
     }
 
     reset() {
@@ -606,11 +606,9 @@ class PerspectiveApp {
         // Reset view
         const { width, height } = this.originalImage;
         const scaleX = this.canvas.width / width;
-        // --- EDIT: Adjusted height calculation for new button layout ---
         const controlsHeight = document.getElementById('controls').offsetHeight || 160;
         const availableHeight = this.canvas.height - controlsHeight;
         const scaleY = availableHeight / height;
-        // --- END EDIT ---
         
         this.imagePos.scale = Math.min(scaleX, scaleY) * 0.9; // Zoom out 10%
         this.imagePos.x = (this.canvas.width - width * this.imagePos.scale) / 2;
@@ -663,7 +661,6 @@ class PerspectiveApp {
             this.draggedHandle = null;
             let minD = Infinity;
             
-            // This loop is safe now because quadPoints is only [] before reset()
             for (let i = 0; i < this.quadPoints.length; i++) {
                 const d = Vec.distSqr(imgTouchPos, this.quadPoints[i]);
                 if (d < handleRadius**2 && d < minD) {
@@ -1013,17 +1010,22 @@ class PerspectiveApp {
     }
     
     showMainView() {
-        this.outputCanvas.style.display = 'none';
-        this.mainControls.style.display = 'grid';
         this.outputControls.style.display = 'none';
+        this.mainControls.style.display = 'flex';
+
+        // Show the main canvas and hide the output canvas
+        this.outputCanvas.style.display = 'none';
         this.canvas.style.display = 'block';
+
+        this.reset();
     }
     
     showOutputView() {
+        this.mainControls.style.display = 'none';
+        this.outputControls.style.display = 'flex';
+        // Hide the main canvas (original image) and show the output (transformed) canvas
         this.canvas.style.display = 'none';
         this.outputCanvas.style.display = 'block';
-        this.mainControls.style.display = 'none';
-        this.outputControls.style.display = 'grid';
     }
     
     /**
