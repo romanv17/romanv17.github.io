@@ -1013,17 +1013,14 @@ class PerspectiveApp {
         this.outputControls.style.display = 'none';
         this.mainControls.style.display = 'flex';
 
-        // Show the main canvas and hide the output canvas
         this.outputCanvas.style.display = 'none';
         this.canvas.style.display = 'block';
-
-        this.reset();
     }
     
     showOutputView() {
         this.mainControls.style.display = 'none';
         this.outputControls.style.display = 'flex';
-        // Hide the main canvas (original image) and show the output (transformed) canvas
+        
         this.canvas.style.display = 'none';
         this.outputCanvas.style.display = 'block';
     }

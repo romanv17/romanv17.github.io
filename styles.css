@@ -64,37 +64,16 @@ html, body {
     gap: 12px;
 }
 
-/* Main and output control rows: default to flex row layout. We keep
-   `#outputControls` initially hidden, but when the script toggles
-   inline styles (e.g. sets `display: grid`), the attribute selector
-   below forces a horizontal flex layout so items don't stack vertically. */
-#mainControls {
+#mainControls, #outputControls {
     display: flex;
     text-align: justify;
     flex-direction: row;
     justify-content: space-around;
-    align-items: center;
+    align-content: center;
 }
 
-/* Hidden by default until the app shows the output controls */
 #outputControls {
     display: none;
-}
-
-/* When the script adds an inline `style` and sets `display: grid`,
-   override that specific case and force a horizontal flex layout so
-   buttons remain in a row. We intentionally only match the `grid`
-   value so cases where the script sets `display: none` are NOT
-   overridden (allowing the script to hide a control group). */
-#mainControls[style*="display: grid"],
-#mainControls[style*="display:grid"],
-#outputControls[style*="display: grid"],
-#outputControls[style*="display:grid"] {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-around !important;
-    align-items: center !important;
-    gap: 12px !important;
 }
 
 /* Buttons */
