@@ -1035,31 +1035,11 @@ class PerspectiveApp {
         await new Promise(r => setTimeout(r, 50));
         
         const outputImgData = CV.transformImage(this.originalImageData, H_inv, dstW, dstH);
+    
         
-    // Draw ImageData to a temporary canvas at logical size, then copy to the
-    // visible output canvas while accounting for devicePixelRatio so it appears crisp.
-    const dpr = window.devicePixelRatio || 1;
-
-    const tmp = document.createElement('canvas');
-    tmp.width = dstW;
-    tmp.height = dstH;
-    const tmpCtx = tmp.getContext('2d');
-    tmpCtx.putImageData(outputImgData, 0, 0);
-
-    // Set CSS size for output canvas (logical pixels)
-    this.outputCanvas.style.width = dstW + 'px';
-    this.outputCanvas.style.height = dstH + 'px';
-
-    // Set backing store to DPR-scaled size
-    this.outputCanvas.width = Math.round(dstW * dpr);
-    this.outputCanvas.height = Math.round(dstH * dpr);
-
-    // Ensure drawing operations are in CSS pixels
-    this.outputCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.outputCtx.imageSmoothingEnabled = true;
-    this.outputCtx.imageSmoothingQuality = 'high';
-    this.outputCtx.clearRect(0, 0, dstW, dstH);
-    this.outputCtx.drawImage(tmp, 0, 0, dstW, dstH);
+        this.outputCanvas.width = dstW;
+        this.outputCanvas.height = dstH;
+        this.outputCtx.putImageData(outputImgData, 0, 0);
 
         this.showOutputView();
         this.hideLoader();
