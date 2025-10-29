@@ -489,7 +489,7 @@ class PerspectiveApp {
     bindEvents() {
         window.addEventListener('resize', this.resize.bind(this));
         
-        this.cameraInput.addEventListener('click', this.loadImage.bind(this));
+        this.cameraInput.addEventListener('change', this.loadImage.bind(this));
         
         this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
         this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
@@ -504,8 +504,37 @@ class PerspectiveApp {
     }
 
     resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        // Handle high-DPI displays by setting backing-store size separately
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = window.innerWidth;
+        const cssH = window.innerHeight;
+
+        // store logical (CSS) sizes for other layout code to use
+        this.cssWidth = cssW;
+        this.cssHeight = cssH;
+
+        // Set CSS size
+        this.canvas.style.width = cssW + 'px';
+        this.canvas.style.height = cssH + 'px';
+
+        // Set backing store size
+        this.canvas.width = Math.round(cssW * dpr);
+        this.canvas.height = Math.round(cssH * dpr);
+
+        // Scale drawing operations so code can continue to operate in CSS pixels
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Loupe: keep a crisp backing store too
+        const loupeCssW = this.loupeCanvas.offsetWidth || 120;
+        const loupeCssH = this.loupeCanvas.offsetHeight || 120;
+        this.loupeCanvas.style.width = loupeCssW + 'px';
+        this.loupeCanvas.style.height = loupeCssH + 'px';
+        this.loupeCanvas.width = Math.round(loupeCssW * dpr);
+        this.loupeCanvas.height = Math.round(loupeCssH * dpr);
+        this.loupeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Keep output context transform ready (actual size set when rendering output)
+        this.outputCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     showLoader(text) {
@@ -605,14 +634,17 @@ class PerspectiveApp {
 
         // Reset view
         const { width, height } = this.originalImage;
-        const scaleX = this.canvas.width / width;
+        // Use CSS logical sizes for layout calculations (we scale the context to DPR)
+        const canvasCssW = this.cssWidth || window.innerWidth;
+        const canvasCssH = this.cssHeight || window.innerHeight;
+        const scaleX = canvasCssW / width;
         const controlsHeight = document.getElementById('controls').offsetHeight || 160;
-        const availableHeight = this.canvas.height - controlsHeight;
+        const availableHeight = canvasCssH - controlsHeight;
         const scaleY = availableHeight / height;
         
         this.imagePos.scale = Math.min(scaleX, scaleY) * 0.9; // Zoom out 10%
-        this.imagePos.x = (this.canvas.width - width * this.imagePos.scale) / 2;
-        this.imagePos.y = (availableHeight - height * this.imagePos.scale) / 2; // Center in top area
+    this.imagePos.x = (canvasCssW - width * this.imagePos.scale) / 2;
+    this.imagePos.y = (availableHeight - height * this.imagePos.scale) / 2; // Center in top area
 
         // Reset quad points
         const margin = 0.2;
@@ -780,7 +812,10 @@ class PerspectiveApp {
     // --- Main Render Loop ---
     
     render() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Clear using CSS logical size (context is scaled to DPR)
+        const canvasCssW = this.cssWidth || window.innerWidth;
+        const canvasCssH = this.cssHeight || window.innerHeight;
+        this.ctx.clearRect(0, 0, canvasCssW, canvasCssH);
         
         if (this.originalImage) {
             // Apply pan/zoom
@@ -815,11 +850,11 @@ class PerspectiveApp {
             
             this.ctx.restore();
         } else {
-            // Prompt to load image
+            // Prompt to load image (use CSS logical size for coordinates)
             this.ctx.fillStyle = '#999';
             this.ctx.font = '18px sans-serif'; // Fallback font
             this.ctx.textAlign = 'center';
-            this.ctx.fillText('Tap the camera icon to begin.', this.canvas.width / 2, this.canvas.height / 2);
+            this.ctx.fillText('Tap the camera icon to begin.', canvasCssW / 2, canvasCssH / 2);
         }
         
         requestAnimationFrame(this.render.bind(this));
@@ -1001,9 +1036,30 @@ class PerspectiveApp {
         
         const outputImgData = CV.transformImage(this.originalImageData, H_inv, dstW, dstH);
         
-        this.outputCanvas.width = dstW;
-        this.outputCanvas.height = dstH;
-        this.outputCtx.putImageData(outputImgData, 0, 0);
+    // Draw ImageData to a temporary canvas at logical size, then copy to the
+    // visible output canvas while accounting for devicePixelRatio so it appears crisp.
+    const dpr = window.devicePixelRatio || 1;
+
+    const tmp = document.createElement('canvas');
+    tmp.width = dstW;
+    tmp.height = dstH;
+    const tmpCtx = tmp.getContext('2d');
+    tmpCtx.putImageData(outputImgData, 0, 0);
+
+    // Set CSS size for output canvas (logical pixels)
+    this.outputCanvas.style.width = dstW + 'px';
+    this.outputCanvas.style.height = dstH + 'px';
+
+    // Set backing store to DPR-scaled size
+    this.outputCanvas.width = Math.round(dstW * dpr);
+    this.outputCanvas.height = Math.round(dstH * dpr);
+
+    // Ensure drawing operations are in CSS pixels
+    this.outputCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.outputCtx.imageSmoothingEnabled = true;
+    this.outputCtx.imageSmoothingQuality = 'high';
+    this.outputCtx.clearRect(0, 0, dstW, dstH);
+    this.outputCtx.drawImage(tmp, 0, 0, dstW, dstH);
 
         this.showOutputView();
         this.hideLoader();
