@@ -851,7 +851,7 @@ class PerspectiveApp {
             this.ctx.restore();
         } else {
             // Prompt to load image (use CSS logical size for coordinates)
-            this.ctx.fillStyle = '#999';
+            this.ctx.fillStyle = '#989898ff';
             this.ctx.font = '18px sans-serif'; // Fallback font
             this.ctx.textAlign = 'center';
             this.ctx.fillText('Tap the camera icon to begin.', canvasCssW / 2, canvasCssH / 2);
@@ -1035,14 +1035,41 @@ class PerspectiveApp {
         await new Promise(r => setTimeout(r, 50));
         
         const outputImgData = CV.transformImage(this.originalImageData, H_inv, dstW, dstH);
-    
         
-        this.outputCanvas.width = dstW;
-        this.outputCanvas.height = dstH;
-        this.outputCtx.putImageData(outputImgData, 0, 0);
+    // Put image data into the output canvas backing store
+    // We'll use a 1:1 backing store (width/height = image pixels) and
+    // then size the canvas element (CSS width/height and position)
+    // so that it behaves like `object-fit: contain` inside the area
+    // above the bottom controls.
+    this.outputCanvas.width = dstW;
+    this.outputCanvas.height = dstH;
 
-        this.showOutputView();
-        this.hideLoader();
+    // Ensure the output ctx draw transform is identity so putImageData maps 1:1
+    this.outputCtx.setTransform(1, 0, 0, 1, 0, 0);
+    this.outputCtx.putImageData(outputImgData, 0, 0);
+
+    // Compute available display area (CSS pixels) above the controls
+    const controlsHeight = document.getElementById('controls').offsetHeight || 160;
+    const availableWidth = this.cssWidth || window.innerWidth;
+    const availableHeight = (this.cssHeight || window.innerHeight) - controlsHeight;
+
+    // Compute contain-style scale so the entire image fits without overlapping controls
+    const scale = Math.min(availableWidth / dstW, availableHeight / dstH);
+    const displayW = Math.round(dstW * scale);
+    const displayH = Math.round(dstH * scale);
+
+    // Position the canvas centered in the available top area
+    const left = Math.round((availableWidth - displayW) / 2);
+    const top = Math.round((availableHeight - displayH) / 2);
+
+    // Apply CSS sizing/positioning for the element (these are logical CSS pixels)
+    this.outputCanvas.style.width = displayW + 'px';
+    this.outputCanvas.style.height = displayH + 'px';
+    this.outputCanvas.style.left = left + 'px';
+    this.outputCanvas.style.top = top + 'px';
+
+    this.showOutputView();
+    this.hideLoader();
     }
     
     showMainView() {
